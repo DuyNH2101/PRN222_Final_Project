@@ -1,0 +1,377 @@
+﻿@{
+    Layout = "_Layout";
+}
+
+<section style="background-color: white;">
+    <div class="container py-5">
+
+
+        <div class="row">
+            <div class="col-lg-4">
+                <div class="card mb-4 row">
+                    <div class="card-body text-center">
+
+                        @if (ViewBag.User.gender == null)
+                        {
+                            <img src="https://emedia1.nhs.wales/HEIW2/cache/file/F4C33EF0-69EE-4445-94018B01ADCF6FD4.png" alt="avatar"
+                                 class="rounded-circle img-fluid" style="width: 150px;">
+                        }
+                        else if (ViewBag.User.gender == "Male")
+                        {
+                            <img src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-chat/ava3.webp" alt="avatar"
+                                 class="rounded-circle img-fluid" style="width: 150px;">
+                        }
+                        else if (ViewBag.User.gender == "Female")
+                        {
+                            <img src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-chat/ava4.webp" alt="avatar"
+                                 class="rounded-circle img-fluid" style="width: 150px;">
+                        }
+
+
+
+
+                        <h5 class="my-3">@ViewBag.User.displayName</h5>
+
+                        @if (ViewBag.Account != null && ViewBag.Account.username != null)
+                        {
+                            <div class="d-flex justify-content-center mb-2">
+                                <button type="button" class="btn btn-outline-secondary ms-1" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+                                    Change password
+                                </button>
+                            </div>
+                        }
+
+                    </div>
+                </div>
+
+
+            </div>
+            <div class="col-lg-8">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <form action="/UserProfile/Update" method="post">
+                            <div class="row mb-3">
+                                <div class="col-sm-3">
+                                    <label for="displayName" class="form-label">Display Name</label>
+                                </div>
+                                <div class="col-sm-9">
+                                    <input type="text" class="form-control" id="displayName" name="displayName" minlength="4" maxlength="100"
+                                           value="@ViewBag.User.displayName" placeholder="Enter your display name"
+                                            required>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-sm-3">
+                                    <label for="email" class="form-label">Email</label>
+                                </div>
+                                <div class="col-sm-9">
+                                    <input type="email" id="email" name="email" minlength="10" maxlength="30" class="form-control" required
+                                           value="@ViewBag.User.email" @(ViewBag.Account?.externalType == "Google" ? "readonly" : "") />
+                                    @if (TempData["ErrorEmail"] != null)
+                                    {
+                                        <span class="text-danger">@TempData["ErrorEmail"]</span>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-sm-3">
+                                    <label for="phoneNumber" class="form-label">Phone Number</label>
+                                </div>
+                                <div class="col-sm-9">
+                                    <input type="text" id="phoneNumber" name="phoneNumber" pattern="^0\d{9}$" title="Please enter a valid phone number" class="form-control" required
+                                           value="@(ViewBag.User?.phoneNumber ?? "")" />
+                                    @if (TempData["ErrorPhone"] != null)
+                                    {
+                                        <span class="text-danger">@TempData["ErrorPhone"]</span>
+                                    }
+                                </div>
+
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-sm-3">
+                                    <label for="birthday" class="form-label">Birthday</label>
+                                </div>
+                                <div class="col-sm-9">
+                                    <input type="date" class="form-control" id="birthday" name="birthday"
+                                           value="@(ViewBag.User?.birthday ?? "")"
+                                           min="@DateTime.Now.AddYears(-100).ToString("yyyy-MM-dd")"
+                                           max="@DateTime.Now.AddYears(0).ToString("yyyy-MM-dd")" />
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-sm-3">
+                                    <label for="gender" class="form-label">Gender</label>
+                                </div>
+                                <div class="col-sm-9">
+                                    <select class="form-control text-muted mb-0" id="gender" name="gender">
+                                        @if (ViewBag.User.gender == "Male")
+                                        {
+                                            <option value="Male" selected=>Male</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="Male">Male</option>
+                                        }
+
+                                        @if (ViewBag.User.gender == "Female")
+                                        {
+                                            <option value="Female" selected=>Female</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="Female">Female</option>
+                                        }
+
+                                        @if (ViewBag.User.gender == null)
+                                        {
+                                            <option value="" selected></option>
+                                        }
+
+
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-sm-3">
+                                    <label for="firstName" class="form-label">First Name</label>
+                                </div>
+                                <div class="col-sm-9">
+                                    <input type="text" minlength="4" maxlength="64" class="form-control" id="firstName" name="firstName" value="@(ViewBag.User?.firstName ?? "")">
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-sm-3">
+                                    <label for="lastName" class="form-label">Last Name</label>
+                                </div>
+                                <div class="col-sm-9">
+                                    <input type="text" minlength="4" maxlength="64" class="form-control" id="lastName" name="lastName" value="@(ViewBag.User?.lastName ?? "")">
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-sm-3">
+                                    <label for="province" class="form-label">Province</label>
+                                </div>
+                                <div class="col-sm-9">
+                                    <select class="css_select" id="tinh" name="province" title="Chọn Tỉnh Thành">
+                                        <option value="0">Tỉnh Thành</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-sm-3">
+                                    <label for="district" class="form-label">District</label>
+                                </div>
+                                <div class="col-sm-9">
+                                    <select class="css_select" id="quan" name="district" title="Chọn Quận Huyện">
+                                        <option value="0">Quận Huyện</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-sm-3">
+                                    <label for="ward" class="form-label">Ward</label>
+                                </div>
+                                <div class="col-sm-9">
+                                    <select class="css_select" id="phuong" name="ward" title="Chọn Phường Xã">
+                                        <option value="0">Phường Xã</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-sm-3">
+                                    <label for="address" class="form-label">Address Detail</label>
+                                </div>
+                                <div class="col-sm-9">
+                                    <input type="text" minlength="5" maxlength="100" class="form-control" id="address" name="address" value="@(ViewBag.User?.address ?? " ")">
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-sm-12 text-end">
+                                    <button type="submit" class="btn btn-primary">Update</button>
+                                </div>
+                            </div>
+                        </form>
+
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    </div>
+    </div>
+</section>
+<div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="changePasswordModalLabel">Change password</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="changePasswordForm" method="post" action="/UserProfile/ChangePassword">
+                    <div class="mb-3">
+                        <label for="currentPassword" class="form-label">Current password</label>
+                        <input type="password" class="form-control" id="currentPassword" name="currentPassword" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="newPassword" class="form-label">New password</label>
+                        <input type="password" class="form-control" id="newPassword" name="newPassword" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="confirmPassword" class="form-label">Confirm new password</label>
+                        <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="notificationModal" tabindex="-1" aria-labelledby="notificationModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="notificationModalLabel">Notification</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="notificationMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script src="~/js/address.js"></script>
+    <script>
+        window.onload = function () {
+            var errorMessage = '@TempData["ErrorMessage"]';
+            var successMessage = '@TempData["SuccessMessage"]';
+            var updateMessage = '@TempData["UpdateMessage"]';
+
+
+            if (updateMessage) {
+                document.getElementById('notificationMessage').innerText = updateMessage;
+                var updateModal = new bootstrap.Modal(document.getElementById('notificationModal'));
+                updateModal.show();
+            }
+            if (errorMessage) {
+                document.getElementById('notificationMessage').innerText = errorMessage;
+                var errorModal = new bootstrap.Modal(document.getElementById('notificationModal'));
+                errorModal.show();
+            } else if (successMessage) {
+                document.getElementById('notificationMessage').innerText = successMessage;
+                var successModal = new bootstrap.Modal(document.getElementById('notificationModal'));
+                successModal.show();
+            }
+        }
+        var userProvince = "@(ViewBag.User?.province)";
+        var userDistrict = "@(ViewBag.User?.district)";
+        var userWard = "@(ViewBag.User?.ward)";
+        
+        $(document).ready(function () {
+            console.log("Document is ready");
+
+            // Load provinces
+            $.ajax({
+                url: '/address/getProvinces',
+                type: 'GET',
+                success: function (data_tinh) {
+                    console.log("Provinces loaded:", data_tinh);
+
+                    // Populate provinces dropdown
+                    $.each(data_tinh, function (key_tinh, val_tinh) {
+                        $("#tinh").append('<option value="' + val_tinh.provinceID + '">' + val_tinh.provinceName + '</option>');
+                    });
+
+                    // Set userProvince if available after provinces are loaded
+                    if (userProvince) {
+                        console.log("Setting province to:", userProvince);
+                        $("#tinh").val(userProvince).trigger('change');
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error("Error loading provinces:", error);
+                    console.log("Status code:", xhr.status);
+                }
+            });
+
+            // Province change event
+            $(document).on('change', '#tinh', function () {
+                var idtinh = $(this).val();
+                $("#quan").html('<option value="0">Quận Huyện</option>');
+                $("#phuong").html('<option value="0">Phường Xã</option>');
+
+                // Load districts
+                $.ajax({
+                    url: '/address/getDistricts?provinceId=' + idtinh,
+                    type: 'GET',
+                    success: function (data_quan) {
+                        console.log("Districts loaded:", data_quan);
+                        $.each(data_quan, function (key_quan, val_quan) {
+                            $("#quan").append('<option value="' + val_quan.districtID + '">' + val_quan.districtName + '</option>');
+                        });
+
+                        // Set userDistrict if available after districts are loaded
+                        if (userDistrict) {
+                            console.log("Setting district to:", userDistrict);
+                            $("#quan").val(userDistrict).trigger('change');
+                        }
+                    }
+                });
+            });
+
+            // District change event
+            $(document).on('change', '#quan', function () {
+                var idquan = $(this).val();
+                var selectedProvince = $("#tinh option:selected").text();
+                $("#phuong").html('<option value="0">Phường Xã</option>');
+
+
+                $.ajax({
+                    url: '/address/getWards?districtId=' + idquan,
+                    type: 'GET',
+                    success: function (data_phuong) {
+                        console.log("Wards loaded:", data_phuong);
+                        $.each(data_phuong, function (key_phuong, val_phuong) {
+                            $("#phuong").append('<option value="' + val_phuong.wardCode + '">' + val_phuong.wardName + '</option>');
+                        });
+
+                        // Set userWard if available after wards are loaded
+                        if (userWard) {
+                            console.log("Setting ward to:", userWard);
+                            $("#phuong").val(userWard);
+                        }
+                    }
+                });
+            });
+
+            // Ward change event
+            $(document).on('change', '#phuong', function () {
+                var selectedCommune = $(this).find("option:selected").text();
+                var selectedDistrict = $("#quan option:selected").text();
+                var selectedProvince = $("#tinh option:selected").text();
+                $('#address').val(selectedProvince + ", " + selectedDistrict + ", " + selectedCommune);
+            });
+        });
+
+    </script>
+}
+
+
+
