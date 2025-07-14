@@ -1,0 +1,520 @@
+﻿@model X.PagedList.IPagedList<E_Retalling_Portal.Models.FeedbackViewModel>
+
+@{
+    ViewData["Title"] = "View Product";
+    var productDiscounts = ViewBag.productDiscounts as Dictionary<int, ProductDiscountItemModel>;
+}
+
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="@Url.Action("Index", "Home")">Home</a>
+        </li>
+    </ol>
+</nav>
+<!-- content -->
+<section class="py-5">
+    <div class="container">
+        <div class="row gx-5">
+            <aside class="col-lg-5">
+                <div class="border rounded-4 mb-3 d-flex justify-content-center">
+                    <a data-fslightbox="mygalley" class="rounded-4" target="_blank" data-type="image" href="~/productImages/@(ViewBag.product.coverImage.imageName)">
+                        <img id="mainImage" style="width: 100%; height: 500px; object-fit: cover; margin: auto;" class="rounded-4 fit" src="~/productImages/@(ViewBag.product.coverImage.imageName)" />
+                    </a>
+
+                </div>
+
+                <div class="d-flex justify-content-center mb-3">
+                    @foreach (var image in ViewBag.productImageList)
+                    {
+                        <a onmouseover="updateMainImage('/productImages/@image.imageName')"
+                           onmouseout="resetMainImage('/productImages/@ViewBag.product.coverImage.imageName')"
+                           data-fslightbox="mygalley" class="border mx-1 rounded-2" target="_blank" data-type="image" href="~/productImages/@image.imageName">
+                            <img width="60" height="60" class="rounded-2" src="~/productImages/@image.imageName" />
+                        </a>
+                    }
+                </div>
+            </aside>
+
+
+            <main class="col-lg-7">
+                <div class="ps-lg-3">
+                    <h4 class="title text-dark">
+                        @ViewBag.product.name
+                    </h4>
+                    <div class="d-flex flex-row my-3">
+                        <div class="text-warning mb-1 me-2">
+                            @for (int i = 1; i <= 5; i++)
+                            {
+                                if (i <= ViewBag.averageRating)
+                                {
+                                    <i class="fa fa-star"></i> 
+                                }
+                                else
+                                {
+                                    <i class="fa fa-star text-muted"></i> 
+                                }
+                            }
+                            <span class="ms-1">
+                                @ViewBag.averageRating 
+                            </span>
+                        </div>
+                        <span class="text-muted">
+                            <i class="fas fa-shopping-basket fa-sm mx-1"></i>
+                            @if (ViewBag.quantityProduct == 0)
+                            {
+                                <span> @ViewBag.product.quantity</span>
+                            }
+                            else
+                            {
+                                <span> @ViewBag.quantityProduct</span>
+                            }
+                        </span>
+                        <span class="text-success ms-2">In stock</span>
+                    </div>
+
+                    <div class="mb-3">
+                        <span class="h5" id="productPrice">
+                            @if (ViewBag.product.isVariation == true)
+                            {
+                                if (ViewBag.minPrice == ViewBag.maxPrice)
+                                {
+                                    @($"{ViewBag.minPrice.ToString("#,0").Replace(",", ".")}VND")
+                                }
+                                else
+                                {
+                                    <span id="newPrice">@($"{ViewBag.minPrice.ToString("#,0").Replace(",", ".")} VND") -</span>
+                                    <span id="oldPrice" style="display: inline;">@($"{ViewBag.maxPrice.ToString("#,0").Replace(",", ".")} VND")</span>
+                                    <s><span id="discount" style="display: inline;"></span></s>
+                                }
+                            }
+                            else
+                            {
+                                @if(ViewBag.productPrice != ViewBag.product.price)
+                                {
+                                    @($"{ViewBag.productPrice.ToString("#,0").Replace(",", ".")}VND")     <s>@($"{ViewBag.product.price.ToString("#,0").Replace(",", ".")}VND")</s>
+                                }else{
+                                    @($"{ViewBag.product.price.ToString("#,0").Replace(",", ".")}VND")
+                                }
+                            }
+
+
+                        </span>
+                    </div>
+                    <div class="product-grid">
+                        @foreach (var productItem in ViewBag.productItemList)
+                        {
+                            <button class="custom-button"
+                                    onclick="toggleSelection(this, @productItem.quantity, '/productImages/@(productItem.image.imageName)', @productItem.id, @productItem.price, @(ViewBag.discountPrices != null && ViewBag.discountPrices.ContainsKey(productItem.id) ? ViewBag.discountPrices[productItem.id] : 0))"
+                                    onmouseover="updateMainImage('/productImages/@(productItem.image.imageName)')"
+                                    onmouseout="resetMainImage('/productImages/@ViewBag.product.coverImage.imageName')">
+                                <img src="~/productImages/@(productItem.image.imageName)" alt="Alternate Text" />
+                                @productItem.attribute
+                            </button>
+
+                        }
+                    </div>
+
+
+                    <hr />
+                    <div class="col-md-4 col-6 mb-3">
+                        <label class="mb-2 d-block">Quantity: </label>
+                        <div class="input-group mb-3" style="width: 170px;">
+                            <button class="btn btn-white border border-secondary px-3" type="button" id="button-addon1" data-mdb-ripple-color="dark" onclick="decreaseValue()">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                            <input type="text" id="quantityInput" class="form-control text-center border border-secondary" value="1" aria-label="Example text with button addon" aria-describedby="button-addon1" style="width: 50px; padding: 0;" oninput="validateQuantity(this)" />
+                            <button class="btn btn-white border border-secondary px-3" type="button" id="button-addon2" data-mdb-ripple-color="dark" onclick="increaseValue()">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                            Quantity available: <span id="quantityDisplay">@ViewBag.product.quantity</span>
+                        </div>
+                    </div>
+                    <form id="addToCartForm" style="display: none;">
+                        <input type="hidden" name="productItemId" id="productItemId" />
+                        <input type="hidden" name="quantity" id="quantity" />
+                    </form>
+
+                    <button onclick="addToCart(selectedProductId, document.getElementById('quantityInput').value, 'buyNow')" class="btn btn-warning shadow-0">
+                        <i class="me-1 fa fa-shopping-basket"></i> Buy now
+                    </button>
+                    <button onclick="addToCart(selectedProductId, document.getElementById('quantityInput').value, 'addToCart')" class="btn btn-primary shadow-0">
+                        <i class="me-1 fa fa-shopping-basket"></i> Add to Cart
+                    </button>
+
+                    <div id="popupMessage" class="popup-message" style="display: none; top:50px; height:40px;">Added to cart successfully!</div>
+                    <div id="errorMessage" class="popup-message" style="display: none; background-color:white;color: red; top:50px; height:40px;">Please choose a product!</div>
+                    <p>
+                        @Html.Raw(ViewBag.product.desc)
+                    </p>
+                </div>
+            </main>
+        </div>
+
+
+        <div class="row shop-bar">
+            <div class="row">
+                <div class="col-1 d-flex justify-content-end align-items-center">
+                    <a class="avatar rounded-circle" style="display:inline-block; width:auto; height:auto;">
+                        <img src="~/img/Shop_Icon.png" style="border:black 1px solid; width:60px;">
+                    </a>
+                </div>
+
+                <div class="col-2 d-flex flex-column justify-content-center">
+                    <div class="shopname">
+                        <div>@ViewBag.product.shop.name</div>
+                    </div>
+                    <a href="Home/ViewShop?id=@ViewBag.product.shop.id" class="btn btn-success shadow-0 mt-2 viewshop-btn">View Shop</a>
+                </div>
+            </div>
+        </div>
+        <div class="row g-3" id="reviews-section">
+
+            @if (Model != null && Model.Any())
+            {
+                <h2 class="feedback-title" style="font-size: 25px">Customer Feedback (@Model.Count Feedbacks)</h2>
+               
+                foreach (var feedback in Model)
+                {
+                    <div class="feedback-item" style="margin: 0">
+                        <div class="feedback-header">
+                            <div class="user-info">
+                                <strong class="user-name">@feedback.displayName</strong>
+                                @if (!string.IsNullOrEmpty(feedback.productItemAttribute))
+                                {
+                                    <div class="feedback-product-attribute">
+                                        <small>Attribute: @feedback.productItemAttribute</small>
+                                    </div>
+                                }
+                                <span class="rating">
+                                    @for (int i = 1; i <= 5; i++)
+                                    {
+                                        if (i <= feedback.rating)
+                                        {
+                                            <span class="filled-star">&#9733;</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="empty-star">&#9734;</span>
+                                        }
+                                    }
+                                </span>
+                            </div>
+                        </div>
+                        <p class="feedback-comment">@feedback.comment</p>
+                    </div>
+                }
+
+                @Html.PagedListPager(Model, page => Url.Action("Index", new { productId = ViewBag.product.id, page }),
+                         new PagedListRenderOptions
+            {
+                DisplayLinkToFirstPage = PagedListDisplayMode.IfNeeded,
+                DisplayLinkToLastPage = PagedListDisplayMode.IfNeeded,
+                MaximumPageNumbersToDisplay = 10,
+                DisplayLinkToPreviousPage = PagedListDisplayMode.Always,
+                DisplayLinkToNextPage = PagedListDisplayMode.Always,
+            })
+            }
+            else
+            {
+                <div class="no-feedback-message" style="text-align: center; margin-top: 20px; font-size: 20px; color: #8936Ec;">
+                    <strong>No feedback available.</strong> <br />
+                    We would love to hear your thoughts!
+                </div>
+            }
+
+
+            <style>
+                .no-feedback-message {
+                    text-align: center;
+                    margin-top: 20px;
+                    font-size: 20px;
+                    color: red;
+                }
+
+                .feedback-title {
+                    text-align: center;
+                    font-size: 28px;
+                    margin-bottom: 20px;
+                    color: #333;
+                }
+
+                .feedback-item {
+                    border: 1px solid #e3e3e3;
+                    border-radius: 8px;
+                    padding: 15px;
+                    margin-bottom: 20px;
+                    background-color: #f9f9f9;
+                    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+                }
+
+                .feedback-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                }
+
+                .user-info {
+                    display: flex;
+                    flex-direction: column; 
+                    align-items: flex-start;
+                }
+
+                .user-name {
+                    font-size: 18px;
+                    font-weight: 600;
+                    color: #007bff;
+                }
+
+                .rating {
+                    display: inline-flex;
+                    margin-top: 5px;
+                }
+
+                .filled-star {
+                    color: #FFD700; 
+                    font-size: 20px;
+                    margin-right: 2px;
+                }
+
+                .empty-star {
+                    color: #d3d3d3; 
+                    font-size: 20px;
+                    margin-right: 2px;
+                }
+
+                .feedback-product-attribute {
+                    color: #6c757d; 
+                    font-style: italic;
+                    font-size: 14px;
+                }
+
+                .feedback-comment {
+                    font-size: 16px;
+                    line-height: 1.6;
+                    margin-top: 10px;
+                    color: #333;
+                }
+
+                hr {
+                    border: none;
+                    border-top: 1px solid #e3e3e3;
+                    margin: 20px 0;
+                }
+            </style>
+
+        </div>
+        <div class="row g-3">
+            <h5 class="card-title">Similar</h5>
+            @foreach (var product in ViewBag.similarProducts)
+            {
+                var discount = productDiscounts != null && productDiscounts.ContainsKey(product.id)
+                ? productDiscounts[product.id]
+                : null;
+                <div class="col-md-2 col-sm-6">
+                    <div class="product-grid">
+                        <div class="product-image">
+                            <a href="@Url.Action("Index", "ViewProductDetail", new { area = "Home", productId = product.id })" class="image">
+                                @if (discount!=null && discount.productDiscount != null && discount.isDiscount == "true")
+                                {
+                                    <div class="discount-value">-@discount.productDiscount.discount.value %</div>
+                                }
+                                <img class="img-1" src="~/productImages/@product.coverImage.imageName">
+                                @if (product.images.Count > 1)
+                                {
+                                    <img class="img-2" src="~/productImages/@product.images[1].imageName">
+                                }
+                            </a>
+                            <a href="@Url.Action("Index", "ViewProductDetail", new { area = "Home", productId = product.id })" class="product-view"><i class="fa fa-search"></i></a>
+                        </div>
+                        <div class="product-content">
+                            <h3 class="title"><a href="@Url.Action("Index", "ViewProductDetail", new { area = "Home", productId = product.id })">@product.name</a></h3>
+                            @if (discount != null && discount.product != null && discount.isDiscount == "true")
+                            {
+
+                                <span class="discount-name">@discount.productDiscount.discount.name</span>
+                                <div class="price"> @discount.discountedPrice.ToString("#,0").Replace(",", ".") VND   <s>@discount.product.price.ToString("#,0").Replace(",", ".") VND</s></div>
+                            }
+                            else if (discount != null && discount.productItem != null && discount.isDiscount == "true")
+                            {
+
+                                <span class="discount-name">@discount.productDiscount.discount.name</span>
+                                <div class="price"> @discount.discountedPrice.ToString("#,0").Replace(",", ".") VND   <s>@discount.productItem.price.ToString("#,0").Replace(",", ".") VND</s></div>
+
+                            }
+                            else
+                            {
+                                <div class="price">@product.price.ToString("#,0").Replace(",", ".") VND</div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+
+    </div>
+</section>
+<!-- content -->
+<script src="https://cdn.jsdelivr.net/npm/fslightbox/index.js"></script>
+<script>
+    let maxQuantity = 1;
+    let selectedButton = null;
+    let selectedProductId = null;
+    let productId = @ViewBag.product.id;
+    var isVariation = @((ViewBag.product.isVariation == true) ? "true" : "false");
+    function toggleSelection(button, quantity, imagePath, productId, productPrice, discountPrice) {
+        if (selectedButton === button) {
+            button.classList.remove('selected');
+            selectedButton = null;
+            document.getElementById('quantityInput').value = 1;
+            document.getElementById('quantityDisplay').innerText = @ViewBag.quantityProduct;
+            selectedProductId = null;
+            document.getElementById('discount').style.display = 'none';
+            resetMainImage('/productImages/@ViewBag.product.coverImage.imageName');
+
+            if (isVariation === false) {
+                document.getElementById('productPrice').innerText = parseFloat('@ViewBag.product.price').toLocaleString('vi-VN') + ' VND';
+            } else {
+                const minPrice = parseFloat('@ViewBag.minPrice');
+                const maxPrice = parseFloat('@ViewBag.maxPrice');
+
+                if (minPrice === maxPrice) {
+                    document.getElementById('productPrice').innerText = minPrice.toLocaleString('vi-VN') + ' VND';
+                } else {
+                    document.getElementById('oldPrice').innerText = maxPrice.toLocaleString('vi-VN') + ' VND';
+                    document.getElementById('oldPrice').style.display = 'inline';
+                    document.getElementById('newPrice').innerText = minPrice.toLocaleString('vi-VN') + ' VND -';
+                }
+            }
+        } else {
+            let allButtons = document.querySelectorAll('.custom-button');
+            allButtons.forEach(btn => btn.classList.remove('selected'));
+
+            button.classList.add('selected');
+            selectedButton = button;
+
+            maxQuantity = quantity;
+            document.getElementById('quantityInput').value = 1;
+            document.getElementById('quantityDisplay').innerText = maxQuantity;
+            selectedProductId = productId;
+
+            updateMainImage(imagePath);
+
+            const oldPriceText = parseFloat(productPrice).toLocaleString('vi-VN') + " VND";
+            const newPriceText = discountPrice > 0 ? parseFloat(discountPrice).toLocaleString('vi-VN') + " VND " : "0 VND";
+
+            document.getElementById('discount').innerText = oldPriceText;
+            document.getElementById('newPrice').innerText = newPriceText;
+            document.getElementById('oldPrice').style.display = 'none';
+            if (productPrice != discountPrice) {
+                document.getElementById('discount').style.display = 'inline';
+            } else {
+                document.getElementById('discount').style.display = 'none';
+            }
+        }
+    }
+
+
+
+    function increaseValue() {
+        const quantityInput = document.getElementById('quantityInput');
+        if (selectedButton === null) {
+            maxQuantity = @ViewBag.product.quantity;
+        }
+        if (parseInt(quantityInput.value) < maxQuantity) {
+            quantityInput.value = parseInt(quantityInput.value) + 1;
+        }
+
+    }
+
+    function decreaseValue() {
+        const quantityInput = document.getElementById('quantityInput');
+        if (parseInt(quantityInput.value) > 1) {
+            quantityInput.value = parseInt(quantityInput.value) - 1;
+        }
+    }
+    function validateQuantity(input) {
+        let currentValue = parseInt(input.value);
+
+        if (isNaN(currentValue) || currentValue < 1) {
+            input.value = 1;
+        } else if (currentValue > maxQuantity) {
+            input.value = maxQuantity;
+        }
+    }
+    function updateMainImage(imageSrc) {
+        if (selectedButton === null) {
+            document.getElementById('mainImage').src = imageSrc;
+        }
+    }
+
+    function resetMainImage(defaultImageSrc) {
+        if (selectedButton === null) {
+            document.getElementById('mainImage').src = defaultImageSrc;
+        }
+    }
+    function addToCart(productItemId, quantity,action) {
+        if (isVariation === true && selectedProductId != null) {
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', `/Cart/AddToCart?itemId=${productItemId}&quantity=${quantity}&isProduct=${false}`, true);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    const popupMessage = document.getElementById('popupMessage');
+                    popupMessage.style.display = 'block';
+                    popupMessage.style.opacity = '1';
+
+                    setTimeout(() => {
+                        popupMessage.style.opacity = '0';
+                    }, 1000);
+
+                    setTimeout(() => {
+                        popupMessage.style.display = 'none';
+                        if (action === 'buyNow') {
+                            window.location.href = '/Cart';
+                        } else if (action === 'addToCart') {
+                            location.reload();
+                        }
+                    }, 1500);
+                }
+            };
+            xhr.send();
+        } else if (isVariation === false && selectedProductId == null) {
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', `/Cart/AddToCart?itemId=${productId}&quantity=${quantity}&isProduct=${true}`, true);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    const popupMessage = document.getElementById('popupMessage');
+                    popupMessage.style.display = 'block';
+                    popupMessage.style.opacity = '1';
+
+                    setTimeout(() => {
+                        popupMessage.style.opacity = '0';
+                    }, 1000);
+
+                    setTimeout(() => {
+                        popupMessage.style.display = 'none';
+                        if (action === 'buyNow') {
+                            window.location.href = '/Cart';
+                        } else if (action === 'addToCart') {
+                            location.reload();
+                        }
+                    }, 1500);
+                }
+            };
+            xhr.send();
+        } else {
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.style.display = 'block';
+            setTimeout(() => {
+                errorMessage.style.display = 'none';
+            }, 3000);
+            return;
+        }
+    }
+
+
+
+
+</script>

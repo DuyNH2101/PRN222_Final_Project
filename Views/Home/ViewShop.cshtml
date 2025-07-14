@@ -1,0 +1,92 @@
+﻿@model X.PagedList.IPagedList<E_Retalling_Portal.Models.Product>
+
+@{
+    ViewData["Title"] = "Home Page";
+    var productDiscounts = ViewBag.productDiscounts as Dictionary<int, ProductDiscountItemModel>;
+}
+<div class="row m-3 p-2 shadow border rounded" style="background-color:white">
+    <!-- Left Column -->
+    <div class="col-6">
+        <div class="d-flex align-items-center mb-3">
+            <i class="bi bi-box-seam me-2"></i>
+            <span>Shop: @ViewBag.shop.name</span>
+        </div>
+        <div class="d-flex align-items-center mb-3">
+            <i class="bi bi-box-seam me-2"></i>
+            <span>products: <span class="text-danger fw-bold">@ViewBag.shop.products.Count</span></span>
+        </div>
+        <div class="d-flex align-items-center mb-3">
+            <i class="bi bi-chat-dots me-2"></i>
+            <span>address: @ViewBag.shop.address</span>
+        </div>
+    </div>
+
+    <!-- Right Column -->
+    <div class="col-6">
+        <div class="d-flex align-items-center mb-3">
+            <i class="bi bi-people me-2"></i>
+            <span>Phone number: @ViewBag.Shop.account.user.phoneNumber</span>
+        </div>
+        <div class="d-flex align-items-center mb-3">
+            <i class="bi bi-star me-2"></i>
+            <span>Contract: @ViewBag.Shop.account.user.email</span>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <h3>Products</h3>
+    @foreach (var product in Model)
+    {
+        var discount = productDiscounts != null && productDiscounts.ContainsKey(product.id)
+        ? productDiscounts[product.id]
+        : null;
+        
+        <div class="col-md-2 col-sm-6">
+            <div class="product-grid">
+                <div class="product-image">
+                    <a href="@Url.Action("Index", "ViewProductDetail", new { area = "Home", productId = product.id })" class="image">
+                        @if (discount.productDiscount != null && discount.isDiscount == "true")
+                        {
+                            <div class="discount-value">-@discount.productDiscount.discount.value %</div>
+                        }
+                        <img class="img-1" src="~/productImages/@product.coverImage.imageName">
+                        @if (product.images.Count > 1)
+                        {
+                            <img class="img-2" src="~/productImages/@product.images[1].imageName">
+                        }
+                    </a>
+                    <a href="@Url.Action("Index", "ViewProductDetail", new { area = "Home", productId = product.id })" class="product-view"><i class="fa fa-search"></i></a>
+                </div>
+                <div class="product-content">
+                    <h3 class="title"><a href="@Url.Action("Index", "ViewProductDetail", new { area = "Home", productId = product.id })">@product.name</a></h3>
+                    @if (discount != null && discount.product != null && discount.isDiscount == "true")
+                    {
+
+                        <span class="discount-name">@discount.productDiscount.discount.name</span>
+                        <div class="price"> @discount.discountedPrice.ToString("#,0").Replace(",", ".") VND   <s>@discount.product.price.ToString("#,0").Replace(",", ".") VND</s></div>
+                    }
+                    else if (discount != null && discount.productItem != null && discount.isDiscount == "true")
+                    {
+
+                        <span class="discount-name">@discount.productDiscount.discount.name</span>
+                        <div class="price"> @discount.discountedPrice.ToString("#,0").Replace(",", ".") VND   <s>@discount.productItem.price.ToString("#,0").Replace(",", ".") VND</s></div>
+
+                    }
+                    else
+                    {
+                        <div class="price">@product.price.ToString("#,0").Replace(",", ".") VND</div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>
+@Html.PagedListPager(Model, page => Url.Action("ViewShop", new { page, ViewBag.id }), new PagedListRenderOptions
+{
+    DisplayLinkToFirstPage = PagedListDisplayMode.IfNeeded,
+    DisplayLinkToLastPage = PagedListDisplayMode.IfNeeded,
+    MaximumPageNumbersToDisplay = 8,
+    DisplayLinkToPreviousPage = PagedListDisplayMode.IfNeeded,
+    DisplayLinkToNextPage = PagedListDisplayMode.IfNeeded,
+
+})
